@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+data/
+.env
+.env.local
+*.local
+test-results/
+next-env.d.ts
