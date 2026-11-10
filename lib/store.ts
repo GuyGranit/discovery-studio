@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { SpecDoc } from "./spec";
 
 export type PassState = "issued" | "active" | "expired" | "completed";
 
@@ -48,6 +49,7 @@ interface Db {
   customers: Record<string, Customer>;
   passes: Record<string, Pass>;
   sessions: Record<string, SessionRecord>;
+  specs: Record<string, SpecDoc>;
 }
 
 function dataRoot(): string {
@@ -61,13 +63,15 @@ function dbPath(): string {
 }
 
 function emptyDb(): Db {
-  return { customers: {}, passes: {}, sessions: {} };
+  return { customers: {}, passes: {}, sessions: {}, specs: {} };
 }
 
 async function readDb(): Promise<Db> {
   try {
     const raw = await readFile(dbPath(), "utf8");
-    return JSON.parse(raw) as Db;
+    // Spread over emptyDb() so a data file written before a new top-level
+    // collection existed (e.g. `specs`) doesn't crash lookups against it.
+    return { ...emptyDb(), ...(JSON.parse(raw) as Partial<Db>) };
   } catch {
     return emptyDb();
   }
@@ -172,5 +176,37 @@ export async function updateSession<T>(
     if (!session) throw new Error(`unknown session ${sessionId}`);
     const result = fn(session);
     return { session, result };
+  });
+}
+
+/**
+ * The discovery spec is keyed by customer, not by pass or session, so it
+ * resumes across a customer's whole relationship: a second session on the
+ * same pass, or a session on a brand-new top-up pass, continues the same
+ * document instead of starting the interview over.
+ */
+export async function getSpec(customerId: string): Promise<SpecDoc | null> {
+  const db = await readDb();
+  return db.specs[customerId] ?? null;
+}
+
+export async function putSpec(spec: SpecDoc): Promise<void> {
+  await mutate((db) => {
+    db.specs[spec.customerId] = spec;
+  });
+}
+
+/** Atomically reads (or creates) a customer's spec, lets fn mutate it in
+ * place, and persists the result. */
+export async function updateSpec<T>(
+  customerId: string,
+  makeInitial: () => SpecDoc,
+  fn: (spec: SpecDoc) => T,
+): Promise<{ spec: SpecDoc; result: T }> {
+  return mutate((db) => {
+    const spec = db.specs[customerId] ?? makeInitial();
+    const result = fn(spec);
+    db.specs[customerId] = spec;
+    return { spec, result };
   });
 }

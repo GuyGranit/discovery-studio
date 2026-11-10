@@ -20,6 +20,7 @@ export function SessionClient({ token }: { token: string }) {
   const [draft, setDraft] = useState("");
   const [ended, setEnded] = useState<{ tokensUsed: number; costUsd: number } | null>(null);
   const [pass, setPass] = useState<PassSummary | null>(null);
+  const [coveragePercent, setCoveragePercent] = useState(0);
 
   useEffect(() => {
     fetch("/api/session/start", {
@@ -51,6 +52,9 @@ export function SessionClient({ token }: { token: string }) {
     const body = await res.json();
     if (body.reply) {
       setTurns((t) => [...t, { role: "agent", text: body.reply }]);
+    }
+    if (typeof body.coveragePercent === "number") {
+      setCoveragePercent(body.coveragePercent);
     }
   }
 
@@ -88,6 +92,7 @@ export function SessionClient({ token }: { token: string }) {
 
   return (
     <div>
+      <p>Spec coverage: {coveragePercent}%</p>
       <ul>
         {turns.map((turn, i) => (
           <li key={i}>
