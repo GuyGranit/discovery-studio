@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { conductInterviewTurn } from "./interviewer";
 import { PASS_VALIDITY_DAYS, SESSIONS_PER_PASS, costPerTokenUsd, tokenBudgetPerPass } from "./pricing";
 import {
   Customer,
@@ -166,23 +167,34 @@ function estimateTokens(text: string): number {
 }
 
 /**
- * Appends one customer turn (plus a stand-in agent reply) to a session and
- * accumulates the running token count. The agent's actual reply generation
- * is out of scope here — this only needs to produce *some* token usage to
- * exercise the pass controls end-to-end.
+ * Appends one customer turn (plus the interviewer agent's reply) to a
+ * session and accumulates the running token count that the pass's budget
+ * is debited against at session end. The interview logic itself — spec
+ * template, coverage meter, scope lock, assumption log — lives in
+ * lib/interviewer.ts; this just feeds it the session's history and
+ * records whatever it produced.
  */
-export async function recordMessage(sessionId: string, customerText: string): Promise<{ reply: string; tokensUsedSoFar: number }> {
-  const reply = `Thanks — tell me more about "${customerText.slice(0, 60)}".`;
+export async function recordMessage(
+  sessionId: string,
+  customerText: string,
+): Promise<{ reply: string; tokensUsedSoFar: number; coveragePercent: number }> {
+  const existing = await getSession(sessionId);
+  if (!existing) throw new Error(`unknown session ${sessionId}`);
+  if (existing.endedAt) throw new Error("session already ended");
+
+  const history = existing.turns.map((t) => ({ role: t.role, text: t.text }));
+  const { reply, coverage, inputTokens, outputTokens } = await conductInterviewTurn(existing.customerId, history, customerText);
+
   const now = new Date().toISOString();
+  const customerTokens = inputTokens ?? estimateTokens(customerText);
+  const agentTokens = outputTokens ?? estimateTokens(reply);
   const { session } = await updateSession(sessionId, (s) => {
     if (s.endedAt) throw new Error("session already ended");
-    const customerTokens = estimateTokens(customerText);
-    const agentTokens = estimateTokens(reply);
     s.turns.push({ role: "customer", text: customerText, tokens: customerTokens, at: now });
     s.turns.push({ role: "agent", text: reply, tokens: agentTokens, at: now });
     s.tokensUsedSoFar += customerTokens + agentTokens;
   });
-  return { reply, tokensUsedSoFar: session.tokensUsedSoFar };
+  return { reply, tokensUsedSoFar: session.tokensUsedSoFar, coveragePercent: coverage.percent };
 }
 
 /**

@@ -7,3 +7,4 @@ data/
 *.local
 test-results/
 next-env.d.ts
+tsconfig.tsbuildinfo
