@@ -1,0 +1,47 @@
+# Discovery Studio — DEV deploy.
+#
+# One service, one named volume for all runtime data (customers/passes/
+# sessions/specs — a single JSON file managed by lib/store.ts, keyed off
+# DATA_DIR). No database container.
+#
+# Assumes the Docker host already runs a Traefik reverse proxy with an
+# external `proxy` network and that DNS for APP_HOSTNAME already points at
+# that host — see docs/DEPLOY-DEV.md for the full build/run steps and a
+# fallback for hosts without Traefik.
+
+services:
+  discovery-studio-app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: discovery-studio:dev
+    container_name: discovery-studio-app-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATA_DIR: /data
+    volumes:
+      - discovery_studio_data:/data
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.discovery-studio-dev.rule=Host(`${APP_HOSTNAME}`)
+      - traefik.http.routers.discovery-studio-dev.entrypoints=websecure
+      - traefik.http.routers.discovery-studio-dev.tls.certresolver=letsencrypt
+      - traefik.http.services.discovery-studio-dev.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  discovery_studio_data:
+
+networks:
+  proxy:
+    external: true
