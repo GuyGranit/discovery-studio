@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+data
+test-results
+.git
+.env
+.env.local
+*.local
+npm-debug.log*
