@@ -1,0 +1,124 @@
+  health body: {"status":"ok","version":"0.1.0"} status: 200
+[51ms] GET /api/health
+  status: 200
+[8.2ms] GET / (landing page)
+  status: 200
+[15.6ms] GET /center (operator console, before any customer)
+  status: 200 pass.state: issued link: http://0.0.0.0:3418/session/N25_Jwo6zWsivmCyM06WfVwUv3q7nwxU
+[9ms] POST /api/admin/passes (create customer + activate pass)
+  status: 200
+[12.4ms] GET /center (operator console, after activation)
+  status: 200
+[8.5ms] GET /session/:token (customer landing)
+  status: 200 ok: true sessionId: e8dcaa5d-0bea-4fd3-9629-e2855c9c5601
+[6.8ms] POST /api/session/start
+
+-- English interview --
+  status: 200 coverage: 60 reply: Got it, that covers it. Next: What budget range are you working with for this pr
+[7ms] POST /api/session/message (en): "Our goal is to let customers b..."
+  status: 200 coverage: 70 reply: Got it, that covers it. Next: How will you measure, in numbers, whether this wor
+[8ms] POST /api/session/message (en): "The users are our front-desk s..."
+  status: 200 coverage: 80 reply: Got it, that covers it. Next: What should this project explicitly NOT include, a
+[7.6ms] POST /api/session/message (en): "The customer picks a service, ..."
+  status: 200 tokensUsed: 143 costUsd: 0.00286 pass.sessionsRemaining: 2
+[5.2ms] POST /api/session/end (english session)
+  status: 200 ok: true sessionId: 88f40a7c-8d8b-49fe-99e2-0552aaa987ba
+[4.1ms] POST /api/session/start (2nd session, same token)
+
+-- Hebrew interview --
+  status: 200 coverage: 90 reply: Got it, that covers it. Next: What's the one thing most likely to derail this project, in your view?
+[6.3ms] POST /api/session/message (he): "המטרה שלנו היא לאפשר..."
+  status: 200 coverage: 100 reply: Noted. Let's go deeper on this — What's the one thing most likely to derail this project, in your view?
+[6.4ms] POST /api/session/message (he): "המשתמשים הם אנשי הקב..."
+  status: 200 pass.sessionsRemaining: 1
+[4.9ms] POST /api/session/end (hebrew session)
+
+-- Looking for customer summary / spec pack / internal card --
+  status: 404
+[3.6ms] GET /api/admin/specs (probe)
+  status: 404
+[4.5ms] GET /api/admin/spec-pack (probe)
+  status: 404
+[3.6ms] GET /api/admin/internal-card (probe)
+  status: 404
+[3.7ms] GET /api/admin/customer-summary (probe)
+  status: 404
+[2.6ms] GET /api/spec (probe)
+  status: 404
+[2.9ms] GET /api/spec-pack (probe)
+  status: 404
+[3.7ms] GET /api/internal-card (probe)
+[4.7ms] GET /api/admin/customers (operator overview)
+
+Final overview: {
+  "customers": [
+    {
+      "customer": {
+        "customerId": "o-walkthrough-customer-9a9ccca8",
+        "name": "O Walkthrough Customer",
+        "email": "o-walkthrough@example.test",
+        "createdAt": "2026-11-17T01:11:22.107Z"
+      },
+      "passes": [
+        {
+          "passId": "cab4f8ae-e345-4d5f-9fd9-97139f193e2a",
+          "customerId": "o-walkthrough-customer-9a9ccca8",
+          "token": "7EO8InFf3UYjNPR55PX7mHAx_JSrGAsK",
+          "state": "active",
+          "sessionsTotal": 3,
+          "sessionsRemaining": 1,
+          "tokenBudget": 500000,
+          "tokenBudgetRemaining": 499736,
+          "costToDateUsd": 0.00528,
+          "issuedAt": "2026-11-17T01:11:22.108Z",
+          "expiresAt": "2026-12-17T01:11:22.108Z",
+          "updatedAt": "2026-11-17T01:11:22.245Z",
+          "activatedAt": "2026-11-17T01:11:22.156Z",
+          "remainingDays": 30
+        },
+        {
+          "passId": "57f4849f-9f18-44ee-8e9a-5221866b0c54",
+          "customerId": "o-walkthrough-customer-9a9ccca8",
+          "token": "N25_Jwo6zWsivmCyM06WfVwUv3q7nwxU",
+          "state": "active",
+          "sessionsTotal": 3,
+          "sessionsRemaining": 1,
+          "tokenBudget": 500000,
+          "tokenBudgetRemaining": 499766,
+          "costToDateUsd": 0.00468,
+          "issuedAt": "2026-11-17T01:12:48.821Z",
+          "expiresAt": "2026-12-17T01:12:48.821Z",
+          "updatedAt": "2026-11-17T01:12:48.901Z",
+          "activatedAt": "2026-11-17T01:12:48.849Z",
+          "remainingDays": 30
+        }
+      ],
+      "costToDateUsd": 0.00996
+    }
+  ]
+}
+
+-- Timing summary --
+51ms	GET /api/health
+8.2ms	GET / (landing page)
+15.6ms	GET /center (operator console, before any customer)
+9ms	POST /api/admin/passes (create customer + activate pass)
+12.4ms	GET /center (operator console, after activation)
+8.5ms	GET /session/:token (customer landing)
+6.8ms	POST /api/session/start
+7ms	POST /api/session/message (en): "Our goal is to let customers b..."
+8ms	POST /api/session/message (en): "The users are our front-desk s..."
+7.6ms	POST /api/session/message (en): "The customer picks a service, ..."
+5.2ms	POST /api/session/end (english session)
+4.1ms	POST /api/session/start (2nd session, same token)
+6.3ms	POST /api/session/message (he): "המטרה שלנו היא לאפשר..."
+6.4ms	POST /api/session/message (he): "המשתמשים הם אנשי הקב..."
+4.9ms	POST /api/session/end (hebrew session)
+3.6ms	GET /api/admin/specs (probe)
+4.5ms	GET /api/admin/spec-pack (probe)
+3.6ms	GET /api/admin/internal-card (probe)
+3.7ms	GET /api/admin/customer-summary (probe)
+2.6ms	GET /api/spec (probe)
+2.9ms	GET /api/spec-pack (probe)
+3.7ms	GET /api/internal-card (probe)
+4.7ms	GET /api/admin/customers (operator overview)
