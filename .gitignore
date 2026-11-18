@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+data/
+.walkthrough-data/
+.env
+.env.local
+*.local
+test-results/
+next-env.d.ts
+tsconfig.tsbuildinfo
