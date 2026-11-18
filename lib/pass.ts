@@ -139,7 +139,7 @@ export async function startSession(token: string): Promise<
   const check = await checkPassForToken(token);
   if (!check.ok) return check as SessionCheck & { ok: false };
 
-  const pass = check.pass!;
+  let pass = check.pass!;
   const session: SessionRecord = {
     sessionId: randomUUID(),
     passId: pass.passId,
@@ -151,10 +151,11 @@ export async function startSession(token: string): Promise<
   await putSession(session);
 
   if (!pass.activatedAt) {
-    await updatePass(pass.passId, (p) => {
+    const { pass: activated } = await updatePass(pass.passId, (p) => {
       p.activatedAt = session.startedAt;
       p.state = effectiveState(p);
     });
+    pass = activated;
   }
 
   return { ok: true, session, customer: check.customer!, pass };
