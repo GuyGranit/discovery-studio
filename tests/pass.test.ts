@@ -19,6 +19,19 @@ describe("pass model and controls", () => {
     });
   });
 
+  it("returns the pass as already active (not stale 'issued') from the startSession call that activates it", async () => {
+    await withTempDataDir(async () => {
+      const { issuePass, startSession } = await import("@/lib/pass");
+      const { pass: issued } = await issuePass("First Activation Co");
+      expect(issued.state).toBe("issued");
+
+      const started = await startSession(issued.token);
+      if (!started.ok) throw new Error("expected session to start");
+      expect(started.pass.state).toBe("active");
+      expect(started.pass.activatedAt).toBeTruthy();
+    });
+  });
+
   it("blocks a session when there is no pass for the token", async () => {
     await withTempDataDir(async () => {
       const { checkPassForToken } = await import("@/lib/pass");
