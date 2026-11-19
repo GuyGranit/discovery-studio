@@ -1,0 +1,254 @@
+[
+ {
+  "feature": "Step 0: landing page opens at 390px",
+  "result": "pass",
+  "note": "status 200",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 0 (landing page): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 0 (landing page): no horizontal scroll at 390px",
+  "result": "pass",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=390",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 0 (landing page): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 0 (landing page): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 0 (landing page): tap targets are at least 44px tall",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1: /center opens at 390px",
+  "result": "pass",
+  "note": "status 200",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1 (/center, empty): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1 (/center, empty): no horizontal scroll at 390px",
+  "result": "fail",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=481",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1 (/center, empty): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1 (/center, empty): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 1 (/center, empty): tap targets are at least 44px tall",
+  "result": "fail",
+  "note": "['INPUT:name h=21', 'INPUT:email h=21', 'BUTTON:Payment received — a h=21']",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2: activating a pass returns to /center with no error",
+  "result": "pass",
+  "note": "http://127.0.0.1:4360/center",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2 (/center, pass issued): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2 (/center, pass issued): no horizontal scroll at 390px",
+  "result": "fail",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=770",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2 (/center, pass issued): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2 (/center, pass issued): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2 (/center, pass issued): tap targets are at least 44px tall",
+  "result": "fail",
+  "note": "['INPUT:name h=21', 'INPUT:email h=21', 'BUTTON:Payment received — a h=21']",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2: the new customer is listed",
+  "result": "pass",
+  "note": "GranitCorpIndustrialAutomationSolutionsLtd",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 2: the issued pass's one-time token is resolvable via the admin API",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3: /session/<token> opens at 390px",
+  "result": "pass",
+  "note": "status 200",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3 (session start): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3 (session start): no horizontal scroll at 390px",
+  "result": "pass",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=390",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3 (session start): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3 (session start): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 3 (session start): tap targets are at least 44px tall",
+  "result": "fail",
+  "note": "['TEXTAREA:textarea h=36', 'BUTTON:Send h=21', 'BUTTON:End session h=21']",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after first interview turn): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after first interview turn): no horizontal scroll at 390px",
+  "result": "pass",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=390",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after first interview turn): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after first interview turn): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after first interview turn): tap targets are at least 44px tall",
+  "result": "fail",
+  "note": "['TEXTAREA:textarea h=36', 'BUTTON:Send h=21', 'BUTTON:End session h=21']",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after second interview turn): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after second interview turn): no horizontal scroll at 390px",
+  "result": "pass",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=390",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after second interview turn): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after second interview turn): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 4 (after second interview turn): tap targets are at least 44px tall",
+  "result": "fail",
+  "note": "['TEXTAREA:textarea h=36', 'BUTTON:Send h=21', 'BUTTON:End session h=21']",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5 (session ended): no error shown",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5 (session ended): no horizontal scroll at 390px",
+  "result": "pass",
+  "note": "scrollWidth exceeds viewport by 0px, window.innerWidth=390",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5 (session ended): no text cut off inside a control",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5 (session ended): every button stays within the 390px width",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5 (session ended): tap targets are at least 44px tall",
+  "result": "pass",
+  "note": "[]",
+  "screenshot": ""
+ },
+ {
+  "feature": "Step 5: the ended-session summary shows a token/cost readout",
+  "result": "pass",
+  "note": "",
+  "screenshot": ""
+ }
+]
