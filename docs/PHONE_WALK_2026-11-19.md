@@ -1,4 +1,9 @@
-# JOB-3359: phone-size (390x844) walk of the discovery-studio UAT sheet
+# Phone-size (390x844) walks of the discovery-studio UAT sheet -- 2026-11-19
+
+JOB-3359's original walk (below) and JOB-3368's same-day confirmation
+re-walk (at the end of this doc, after 1 more change merged).
+
+## JOB-3359: phone-size (390x844) walk of the discovery-studio UAT sheet
 
 The first-use path `docs/UAT_SHEET.md` §4 names -- Guy issues a pass from
 `/center`, the customer opens the one-time `/session/<token>` link, has a
@@ -128,3 +133,54 @@ new feature, out of this job's "no new features" scope.
 - The phone walk itself: 35/42 before this job's fix, 42/42 after --
   `docs/uat/phone-walk-2026-11-19/{before,after}/results.json` and
   screenshots.
+
+## JOB-3368 confirmation re-walk (same date, 1 change merged since the prior walk)
+
+This job's premise was 1 change merged since the last recorded walk
+(`07:48`): that change is `91d1f016` above -- JOB-3359's own tap-target/
+overflow fix landing on `main`. This branch starts at `91d1f016`, so the
+job is a fresh re-walk to confirm that merged fix actually holds and
+nothing regressed, not a hunt for a new bug.
+
+**Still no live DEV address.** Re-checked for this job: `git branch -a`
+shows nothing past the branches already listed above, `docs/UAT_SHEET.md`
+§1 and `docs/DEPLOY-DEV.md` are unchanged, `APP_HOSTNAME` is still blank.
+Same as both prior walks, this ran against the `Dockerfile`'s own build
+(`next build` + `next start`) on loopback.
+
+**Tried `o-uat-run` first, as instructed.** It fails exactly the same way
+JOB-3359 documented above -- the shared egress proxy
+(`UAT_PROXY=http://127.0.0.1:3129`) forwards Chromium's absolute-form
+request line to the loopback Next.js server, which redirects back to
+itself, and Chromium loops until Playwright gives up:
+
+```
+the runner wrote no results.json (exit 1): ...
+playwright._impl._errors.Error: Page.goto: net::ERR_TOO_MANY_REDIRECTS at http://127.0.0.1:3457/
+```
+
+This reproduces on an unmodified, freshly-built `next start` with no app
+code involved -- it is the proxy/loopback interaction JOB-3359 already
+filed as outside this repo's and this job's lane, confirmed still true.
+Fell back to the same documented workaround: `tools/uat/phone_walk.py`
+invoked directly (same `--base-url`/`--out-dir` contract `o-uat-run` would
+use) against the loopback build.
+
+**Result: 42/42 checks passed, 0 failures** -- the same steps, same
+long-name customer, run against this branch's actual `HEAD` (`91d1f016`).
+Raw results and screenshots:
+`docs/uat/phone-walk-2026-11-19-JOB-3368/results.json` (and the `.png`s
+beside it). Also checked by hand, beyond the automated 42: opening
+`/session/<a-made-up-token>` (a customer with no active pass) renders
+"You don't have an active Discovery Pass yet..." with zero horizontal
+overflow at 390px -- no error/stack-trace leak on that path either.
+
+**No code fix made this job.** There was nothing to fix -- the one merged
+change since the last walk was JOB-3359's fix itself, and this walk
+confirms it holds. "Before" and "after" are identical here (42/42 both)
+because no regression was found to fix; `docs/uat/phone-walk-2026-11-19-JOB-3368/`
+stands as this job's single confirmation run rather than a before/after
+pair.
+
+Evidence: `npm test` (`vitest run`) **26/26 passing**, unchanged from
+JOB-3359's end state. `npm run build` succeeds.
