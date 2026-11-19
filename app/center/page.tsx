@@ -33,6 +33,7 @@ export default async function CenterPage() {
 
       <section>
         <h2>Customers</h2>
+        <div className="table-scroll">
         <table>
           <thead>
             <tr>
@@ -70,6 +71,7 @@ export default async function CenterPage() {
             )}
           </tbody>
         </table>
+        </div>
       </section>
     </main>
   );

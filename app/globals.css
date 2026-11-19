@@ -1,0 +1,61 @@
+/*
+ * Phone-size UAT fixes (JOB-3359). This app previously shipped with no
+ * stylesheet at all, which is fine on desktop (the browser's default table
+ * layout wraps cell text) but breaks on a phone in two confirmed ways:
+ *
+ * 1. Every input/button/textarea renders at the browser default height
+ *    (~21px) -- well under the ~44px minimum tap target a thumb can
+ *    reliably hit.
+ * 2. The customers table on /center has no word-break and no layout
+ *    constraint, so one long, unbroken customer name (no spaces -- e.g. a
+ *    one-word company name) forces the table past 390px. On a real phone
+ *    that doesn't just scroll one row sideways: it widens the page's whole
+ *    layout viewport, so *everything* on /center ends up tiny and
+ *    pinch-zoomed instead of fitting the screen.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  max-width: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+input,
+textarea,
+button,
+select {
+  min-height: 44px;
+  font-size: 16px; /* also keeps iOS Safari from auto-zooming on focus */
+  padding: 8px 12px;
+}
+
+label {
+  display: block;
+  margin: 12px 0 4px;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td,
+th {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  padding: 4px 8px;
+  text-align: left;
+}
