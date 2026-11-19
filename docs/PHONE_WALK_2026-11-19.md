@@ -1,7 +1,10 @@
 # Phone-size (390x844) walks of the discovery-studio UAT sheet -- 2026-11-19
 
-JOB-3359's original walk (below) and JOB-3368's same-day confirmation
-re-walk (at the end of this doc, after 1 more change merged).
+JOB-3359's original walk (below), JOB-3368's same-day confirmation
+re-walk (after 1 more change merged), and JOB-3378's same-day
+confirmation re-walk (after a claimed, but unverifiable, "2 more
+changes" — see that section for what was actually found) are all in this
+doc, in that order.
 
 ## JOB-3359: phone-size (390x844) walk of the discovery-studio UAT sheet
 
@@ -184,3 +187,58 @@ pair.
 
 Evidence: `npm test` (`vitest run`) **26/26 passing**, unchanged from
 JOB-3359's end state. `npm run build` succeeds.
+
+## JOB-3378 re-walk (same date, premise of "2 changes merged since the
+last walk (2026-11-19T13:52)")
+
+**The premise does not match this repo's actual history.** Checked before
+doing anything else: `git log --all --oneline` (and `git log
+origin/main --oneline`) show `HEAD` is still `bb520f2` — JOB-3368's own
+commit above — with nothing merged after it, on `main` or any other
+branch. `git status` on this branch (`o/JOB-3378-auto`, branched from
+`origin/main`) is clean and already at `bb520f2`. So there are zero code
+changes to re-walk against, let alone two; this is a repeat confirmation
+re-walk, not a hunt for a regression from a real merge. (JOB-3359's
+and JOB-3368's docs above record the same kind of mismatch between a
+job's stated premise and what's actually true on DEV/in this repo — this
+is another instance of that, not a new problem.)
+
+**Still no live DEV address.** Re-checked for this job: `git branch -a`
+and `git log --all` show nothing past the branches already listed above,
+`docs/UAT_SHEET.md` §1 and `docs/DEPLOY-DEV.md` are unchanged,
+`APP_HOSTNAME` is still blank in `.env.example`, no real `.env` exists.
+
+**Tried `o-uat-run` first, as instructed.** It fails exactly the same way
+both prior walks documented — the shared egress proxy forwards
+Chromium's absolute-form request line to the loopback Next.js server,
+which redirects back to itself, and Chromium loops until Playwright gives
+up:
+
+```
+the runner wrote no results.json (exit 1): ...
+playwright._impl._errors.Error: Page.goto: net::ERR_TOO_MANY_REDIRECTS at http://127.0.0.1:3458/
+```
+
+Fell back to the same documented workaround: `tools/uat/phone_walk.py`
+invoked directly (same `--base-url`/`--out-dir` contract `o-uat-run`
+would use) against a freshly built `next start` on loopback, using the
+shared Playwright venv (`/home/o/tools/pw-venv`).
+
+**Result: 42/42 checks passed, 0 failures** — the same steps, same
+long-name customer, run against this branch's actual `HEAD` (`bb520f2`,
+identical code to JOB-3368's end state). Raw results and screenshots:
+`docs/uat/phone-walk-2026-11-19-JOB-3378/results.json` (and the `.png`s
+beside it). Screenshots were also reviewed by eye (not just the
+automated checks): the customers table wraps the long name inside its
+own column with no page-level horizontal scroll, every input/button/
+textarea renders at a comfortable tap height, and the interview/summary
+screens read cleanly at 390px with nothing cut off.
+
+**No code fix made this job.** There was nothing to fix — no change
+landed since JOB-3368's confirmation, and this walk confirms the app
+still holds at 390x844 with zero regressions. "Before" and "after" are
+identical here (42/42 both) for the same reason JOB-3368's were: no
+failure was found to fix.
+
+Evidence: `npm test` (`vitest run`) **26/26 passing**, unchanged from
+JOB-3368's end state. `npm run build` succeeds.
