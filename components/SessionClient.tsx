@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { interpretMessageResponse } from "@/lib/session-client";
 
 interface Turn {
   role: "customer" | "agent";
@@ -21,6 +22,7 @@ export function SessionClient({ token }: { token: string }) {
   const [ended, setEnded] = useState<{ tokensUsed: number; costUsd: number } | null>(null);
   const [pass, setPass] = useState<PassSummary | null>(null);
   const [coveragePercent, setCoveragePercent] = useState(0);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/session/start", {
@@ -50,11 +52,17 @@ export function SessionClient({ token }: { token: string }) {
       body: JSON.stringify({ sessionId, text }),
     });
     const body = await res.json();
-    if (body.reply) {
-      setTurns((t) => [...t, { role: "agent", text: body.reply }]);
+    const result = interpretMessageResponse(body);
+    if (!result.ok) {
+      setSendError(result.error ?? "Something went wrong sending that message. Please try again.");
+      return;
     }
-    if (typeof body.coveragePercent === "number") {
-      setCoveragePercent(body.coveragePercent);
+    setSendError(null);
+    if (result.reply) {
+      setTurns((t) => [...t, { role: "agent", text: result.reply as string }]);
+    }
+    if (typeof result.coveragePercent === "number") {
+      setCoveragePercent(result.coveragePercent);
     }
   }
 
@@ -107,6 +115,7 @@ export function SessionClient({ token }: { token: string }) {
       <button type="button" onClick={endSession}>
         End session
       </button>
+      {sendError && <p role="alert">{sendError}</p>}
     </div>
   );
 }
