@@ -1,72 +1,93 @@
-# JOB-3395: phone-size (390x844) re-walk of the discovery-studio UAT sheet -- 2026-11-20
+# JOB-3426: phone-size (390x844) re-walk of the discovery-studio UAT sheet -- 2026-11-20
 
-This job's premise was 1 change merged since the last recorded walk
-(`2026-11-19T19:52`). Checked before doing anything else: `git log
---oneline -3` shows `HEAD` at `5859f75` -- JOB-3378's own confirmation
-commit, merged `2026-11-19T22:16:07+02:00` (`20:16:07` UTC), which is
-after `19:52` UTC and is the only commit after that point. So the premise
-matches this repo's actual history exactly: the "1 change" is JOB-3378's
-own re-walk commit, already recorded as 42/42 in
-`docs/PHONE_WALK_2026-11-19.md`. This job is a fresh confirmation re-walk
+This job's premise was 2 changes merged since the last recorded walk
+(`2026-11-20T01:52`). Checked before doing anything else: `git log --oneline
+-3` shows `HEAD` at `3055d69` (JOB-3405), with `e71ae2f` (JOB-3395) just
+before it. Both commits' timestamps (`2026-11-20T02:15:28Z` and
+`2026-11-20T05:15:30Z`) land after `01:52Z`, and nothing else does -- so
+"2 changes" is exactly JOB-3395's confirmation re-walk and JOB-3405's own
+walk-plus-fix (the silent send-error swallow, fixed in
+`components/SessionClient.tsx` / `lib/session-client.ts`, already covered by
+`tests/session-client.test.ts`). This job is a fresh confirmation re-walk
 against that merged state, not a hunt for a new regression.
 
 ## Still no live DEV address
 
-Re-checked for this job: `git branch -a` shows nothing past the branches
-already listed in the prior walks' docs, `docs/UAT_SHEET.md` §1 and
-`docs/DEPLOY-DEV.md` are unchanged, `.env.example`'s `APP_HOSTNAME` is
-still blank, and no real `.env` exists in this workspace. Same as all
-four prior walks, this ran against the exact artifact `Dockerfile`'s
-`CMD` runs (`next build` + `next start`) on loopback (`127.0.0.1:3457`).
+Re-checked for this job: `socket.gethostbyname("discover.granitcorp.com")`
+still fails with "Name or service not known" -- unchanged from all five
+prior walks (JOB-3359/3368/3378/3395/3405). `docs/UAT_SHEET.md` §1 and
+`docs/DEPLOY-DEV.md` are unchanged, `.env.example`'s `APP_HOSTNAME` is still
+blank, no real `.env` exists in this workspace. Same as every prior walk,
+this ran against the exact artifact `Dockerfile`'s `CMD` runs (`next build`
++ `next start`) on loopback (`127.0.0.1:3459`).
 
 ## Tried `o-uat-run` first, as instructed
 
-It fails exactly the same way all three prior re-walks documented -- the
-shared egress proxy (`UAT_PROXY=http://127.0.0.1:3129`) forwards
-Chromium's absolute-form request line to the loopback Next.js server,
-which redirects back to itself, and Chromium loops until Playwright gives
-up:
+It fails exactly the same way all five prior re-walks documented -- the
+shared egress proxy (`UAT_PROXY=http://127.0.0.1:3129`) forwards Chromium's
+absolute-form request line to the loopback Next.js server, which redirects
+back to itself, and Chromium loops until Playwright gives up:
 
 ```
 the runner wrote no results.json (exit 1): ...
-playwright._impl._errors.Error: Page.goto: net::ERR_TOO_MANY_REDIRECTS at http://127.0.0.1:3457/
+playwright._impl._errors.Error: Page.goto: net::ERR_TOO_MANY_REDIRECTS at http://127.0.0.1:3460/
 ```
 
 This reproduces on this branch's unmodified `HEAD` with no app code
-involved -- the same pre-existing proxy/loopback interaction JOB-3359
-filed as outside this repo's and this job's lane, confirmed still true.
-Fell back to the same documented workaround: `tools/uat/phone_walk.py`
-invoked directly (same `--base-url`/`--out-dir` contract `o-uat-run`
-would use) against the loopback build, using the shared Playwright venv
+involved -- the same pre-existing proxy/loopback interaction JOB-3359 filed
+as outside this repo's and this job's lane, confirmed still true. Fell back
+to the same documented workaround: `tools/uat/phone_walk.py` invoked
+directly (same `--base-url`/`--out-dir` contract `o-uat-run` would use)
+against the loopback build, using the shared Playwright venv
 (`/home/o/tools/pw-venv`).
+
+One wrinkle specific to this job, worth recording since it cost real time:
+an initial attempt ran the walk against `node .next/standalone/server.js`
+(the literal binary the Dockerfile's `CMD` invokes) started directly from
+the repo root rather than from a Docker image layout. That failed every
+`/_next/static/*` asset with `404` (the Dockerfile's own `COPY --from=builder
+.next/static ./.next/static` and `COPY --from=builder public ./public`
+steps are what put those files next to `server.js` inside the image; running
+the standalone server straight from the repo root skips them), so the
+client bundle never loaded, React never hydrated, and the page stuck on its
+server-rendered "Starting your session…" placeholder forever -- not a
+product bug, a setup artifact of this job's own first attempt. Switched to
+`next start` against the plain build output (same as all five prior walks)
+and the walk completed cleanly; recording this here so a future job doesn't
+re-waste time on the same dead end.
 
 ## Result: 42/42 checks passed, 0 failures
 
-Same steps, same long-name customer (`GranitCorpIndustrialAutomationSolutionsLtd`),
-run against this branch's actual `HEAD` (`5859f75`, identical code to
-JOB-3378's end state). Raw results and screenshots:
-`docs/uat/phone-walk-2026-11-20-JOB-3395/results.json` (and the `.png`s
+Same steps, same long-name customer
+(`GranitCorpIndustrialAutomationSolutionsLtd`), run against this branch's
+actual `HEAD` (`3055d69`, identical code to JOB-3405's end state). Raw
+results and screenshots:
+`docs/uat/phone-walk-2026-11-20-JOB-3426/results.json` (and the `.png`s
 beside it).
 
 Also reviewed by eye, not just the automated 42: the customers table
-(`03-center-after-activate.png`) wraps the long name inside its own
-column with no page-level horizontal scroll at 390px, every
-input/button/textarea renders at a comfortable tap height, and the
-session-ended summary (`07-session-ended.png`) reads cleanly with nothing
-cut off.
+(`03-center-after-activate.png`) wraps the long name inside its own column
+with no page-level horizontal scroll at 390px, every input/button/textarea
+renders at a comfortable tap height, the interview turns
+(`06-session-turn-2.png`) read cleanly with no cut-off text and the
+coverage percentage visible without scrolling, and the session-ended
+summary (`07-session-ended.png`) reads cleanly with nothing cut off.
 
 ## No code fix made this job
 
-There was nothing to fix -- the one merged change since the last walk was
-JOB-3378's own confirmation commit (itself a no-op re-walk), and this
-walk confirms the app still holds at 390x844 with zero regressions.
-"Before" and "after" are identical here (42/42 both), the same reason
-JOB-3368's and JOB-3378's were.
+There was nothing to fix -- the two merged changes since the last walk were
+JOB-3395's own confirmation commit (a no-op re-walk) and JOB-3405's walk
+plus its own fix (already shipped, already tested), and this walk confirms
+the app still holds at 390x844 with zero regressions.
+
+**Before** (this job's premise, i.e. the state the last walk left things
+in) and **after** (this job's own re-run) are identical: 42/42 both, same
+reason JOB-3368's, JOB-3378's, and JOB-3395's were.
 
 ## Evidence
 
-- `npm test` (`vitest run`): **26/26 passing**, unchanged from
-  JOB-3378's end state.
-- `npm run build`: succeeds.
-- The phone walk: 42/42, `docs/uat/phone-walk-2026-11-20-JOB-3395/results.json`
-  and screenshots.
+- `npm test` (`vitest run`): **28/28 passing**, unchanged from JOB-3405's
+  end state.
+- `npm run build`: succeeds, unchanged route list.
+- The phone walk: 42/42,
+  `docs/uat/phone-walk-2026-11-20-JOB-3426/results.json` and screenshots.
