@@ -1,0 +1,10 @@
+
+> discovery-studio@0.1.0 start
+> next start -p 3462
+
+▲ Next.js 16.4.5
+- Local:         http://localhost:3462
+- Network:       http://10.0.2.200:3462
+✓ Ready in 137ms
+✓ Running next.config.mjs took 20ms
+⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
