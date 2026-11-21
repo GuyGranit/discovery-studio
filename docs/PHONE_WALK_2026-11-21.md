@@ -296,3 +296,106 @@ reason every confirmation re-walk since JOB-3368's has been.
   `/api/session/end`).
 - The phone walk: 42/42,
   `docs/uat/phone-walk-2026-11-21-JOB-3525/results.json` and screenshots.
+
+## JOB-3536: phone-size (390x844) re-walk of the discovery-studio UAT sheet -- 2026-11-21
+
+This job's premise was 1 change merged since the last recorded walk
+(`2026-11-21T14:26`). Checked before doing anything else: `git log
+--pretty='%H %cI %s' -5` shows `HEAD` at `41711ca` (JOB-3525,
+`2026-11-21T16:46:33+02:00` = `14:46:33Z`), with `8bb018c` (JOB-3513,
+`08:47:10Z`) just before it. Only JOB-3525's own commit timestamp lands
+after `14:26Z` -- so "1 change" is exactly JOB-3525's own confirmation
+re-walk commit (which made no code changes, per the section above). This
+job is a fresh re-walk against that merged state, not a hunt for a new
+regression.
+
+### `~/ai1-context/uat-sheets/discovery-studio.md` still names no live DEV address
+
+Re-read the UAT sheet this job was told to walk: it still opens with
+"does NOT answer yet: it has no DNS record" and its "Try it on your
+phone" section still reads "Nothing to open yet: the public address has
+no DNS record." This matches `docs/UAT_SHEET.md` §1, unchanged since all
+eleven prior walks -- `discover.granitcorp.com` still has no DNS record,
+and no real `.env` exists in this workspace. This workspace also had no
+`node_modules` yet (a fresh checkout); ran `npm install` to restore it --
+no dependency versions changed (`package-lock.json` untouched).
+
+### Tried `o-uat-run` first, as instructed
+
+```
+o-uat-run discovery-studio --runner tools/uat/phone_walk.py \
+  --manual docs/UAT_MANUAL.md --base-url https://discover.granitcorp.com \
+  --build 41711ca
+```
+
+Failed the same way every prior walk since JOB-3466 documented: no real
+DEV address to point it at, and no admin token in this shell (this app
+has no AI1-Admin password; `/api/admin/*` takes a bearer token instead,
+`lib/admin.ts`).
+
+### Served the app the same way JOB-3525 settled on -- and re-hit JOB-3525's own documented gotcha, from this job's own harness setup
+
+Built with `npm run build`, then ran `node .next/standalone/server.js`
+against the standalone output -- the actual artifact `Dockerfile`'s `CMD`
+runs, per JOB-3525's finding that plain `next start` does not match the
+shipped image. This job's first attempt skipped copying `.next/static`
+and `public/` into `.next/standalone/` before starting the server (the
+two `COPY` steps `Dockerfile` does between build and `CMD`) -- a
+copy-paste slip by this job, not a new finding, but it reproduced exactly
+the symptom JOB-3525 already wrote up: `/session/<token>` stuck forever on
+"Starting your session…" (`tools/uat/phone_walk.py` timed out on
+`page.fill(textarea)` after 30s waiting for the interview box that never
+appears, because the client bundle 404s on every `/_next/static/*` chunk
+and React never hydrates). Copying `.next/static` and `public/` into
+`.next/standalone/` before starting a fresh server process fixed it
+immediately, exactly as JOB-3525 recorded. No application code was
+touched; this is this job's own setup mistake, re-confirming JOB-3525's
+note rather than finding anything new.
+
+### Result: 42/42 checks passed, 0 failures
+
+Ran `tools/uat/phone_walk.py` against `node .next/standalone/server.js`
+(with `.next/static` and `public/` copied in, matching what `Dockerfile`
+does) on loopback, `127.0.0.1:3471`, with a fresh `DATA_DIR` (so
+`02-center-empty.png` shows a genuinely empty customers table), a
+throwaway local `ADMIN_API_TOKEN` (never the AI1-Admin password), and the
+shared Playwright venv (`/home/o/tools/pw-venv`). Same steps, same
+long-name customer (`GranitCorpIndustrialAutomationSolutionsLtd`), run
+against this branch's actual `HEAD` (`41711ca`, identical code to
+JOB-3525's end state). Raw results and screenshots:
+`docs/uat/phone-walk-2026-11-21-JOB-3536/results.json` (and the `.png`s
+beside it).
+
+Also reviewed by eye, not just the automated 42: the landing page
+(`01-landing.png`) and empty `/center` (`02-center-empty.png`) render
+cleanly; the customers table (`03-center-after-activate.png`) wraps the
+long name inside its own column with no page-level horizontal scroll at
+390px and every input/button renders at a comfortable tap height; the
+interview turns (`05-session-turn-1.png`, `06-session-turn-2.png`) read
+cleanly with no cut-off text and the spec coverage percentage visible
+without scrolling; and the session-ended summary (`07-session-ended.png`)
+reads cleanly with nothing cut off.
+
+### No code fix made this job
+
+There was nothing in the app to fix -- the one merged change since the
+last walk was JOB-3525's own confirmation commit (a no-op re-walk, no
+code touched), and the one failure this job hit (the stuck session page)
+traced back to this job's own test-harness setup (forgetting the static-
+asset copy step), not the app, as detailed above. The app still holds at
+390x844 with zero regressions.
+
+**Before** (this job's premise, i.e. the state the last walk left things
+in) and **after** (this job's own re-run) are identical: 42/42 both, same
+reason every confirmation re-walk since JOB-3368's has been.
+
+### Evidence
+
+- `npm test` (`vitest run`): **28/28 passing**, unchanged from JOB-3525's
+  end state.
+- `npm run build`: succeeds, unchanged route list (`/`, `/center`,
+  `/session/[token]`, `/api/health`, `/api/admin/customers`,
+  `/api/admin/passes`, `/api/session/start`, `/api/session/message`,
+  `/api/session/end`).
+- The phone walk: 42/42,
+  `docs/uat/phone-walk-2026-11-21-JOB-3536/results.json` and screenshots.
