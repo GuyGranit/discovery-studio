@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { customerOverviews } from "@/lib/pass";
-import { activatePass } from "./actions";
+import { ADMIN_SESSION_COOKIE, AI1_ADMIN_EMAIL, isAi1AdminSession } from "@/lib/admin";
+import { activatePass, adminLogin, adminLogout } from "./actions";
 
 // Guy's customer/pass list changes every time a pass is issued or a
 // session runs — never prerender this page at build time.
@@ -9,12 +11,46 @@ function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
 }
 
-export default async function CenterPage() {
+export default async function CenterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const session = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+
+  if (!isAi1AdminSession(session)) {
+    const { error } = await searchParams;
+    return (
+      <main>
+        <h1>Center</h1>
+        <section>
+          <h2>AI1-Admin sign-in</h2>
+          <form action={adminLogin}>
+            <label>
+              Email
+              <input type="email" name="email" defaultValue={AI1_ADMIN_EMAIL} required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" required />
+            </label>
+            <button type="submit">Sign in</button>
+          </form>
+          {error && <p role="alert">Wrong e-mail or password.</p>}
+        </section>
+      </main>
+    );
+  }
+
   const overviews = await customerOverviews();
 
   return (
     <main>
       <h1>Center</h1>
+
+      <form action={adminLogout}>
+        <button type="submit">Sign out</button>
+      </form>
 
       <section>
         <h2>Payment received — activate pass</h2>

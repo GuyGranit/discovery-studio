@@ -38,16 +38,21 @@ this sheet once the infra job lands.
 Two separate doors — Guy never uses the customer one, and a customer
 never uses Guy's:
 
-- **Guy, as operator — `/center`.** In production, `/center` and
-  `/api/admin/*` sit behind a Cloudflare Access application restricted to
-  `guy@granitcorp.com` (`lib/admin.ts`, `app/center/actions.ts`). Guy signs
-  in the way that Cloudflare Access application is configured to challenge
-  him — there is no in-app username/password. That Access application is
-  part of the same pending infra job as §1, so it doesn't exist yet either.
-  Scripts and the `/api/admin/*` routes themselves check a bearer token
-  instead (`Authorization: Bearer $ADMIN_API_TOKEN`) as the
-  belt-and-suspenders layer behind Cloudflare Access — confirmed in the
-  walk below (no/wrong token → `401`, correct token → `200`).
+- **Guy, as operator — `/center`.** (JOB-3950, decision 141) `/center`
+  itself now carries an AI1-Admin sign-in form: `ai1-admin@granitcorp.com`
+  plus the one shared password every org app accepts, delivered into
+  `AI1_ADMIN_PASSWORD` by Integrations (`other:ai1-admin`, field
+  `api_key`) via `o-secret-push` — never a password invented for this
+  product alone (`lib/admin.ts`, `app/center/actions.ts`). A successful
+  sign-in sets an httpOnly session cookie that gates `/center`'s console
+  and the `activatePass` server action; signing out clears it. In
+  production, `/center` and `/api/admin/*` are also meant to sit behind a
+  Cloudflare Access application restricted to `guy@granitcorp.com` (not
+  provisioned yet — separate, pending infra, same gap as §1). Scripts and
+  the `/api/admin/*` routes themselves check a bearer token instead
+  (`Authorization: Bearer $ADMIN_API_TOKEN`), unchanged by this job and
+  confirmed in the walk below (no/wrong token → `401`, correct token →
+  `200`).
 - **A customer — `/session/<token>`.** No account, password, or PIN
   anywhere in the built UI. Guy issues the pass from `/center`
   ("Payment received — activate pass"); the one-time link
@@ -85,29 +90,31 @@ actioned here (would be a product decision, not a DEV-walk fix).
 
 As operator:
 
-1. Open `/center` — empty console on first use.
-2. Fill in "Payment received — activate pass" with the customer's name
+1. Open `/center` — the AI1-Admin sign-in form on first use (JOB-3950).
+2. Sign in with `ai1-admin@granitcorp.com` and the shared AI1-Admin
+   password (§2) — the empty console on success.
+3. Fill in "Payment received — activate pass" with the customer's name
    (email optional) and submit. Creates the customer, issues a
    3-session/30-day pass, page shows it as `issued`.
-3. Copy the pass's one-time link (`/session/<token>`) and send it to the
+4. Copy the pass's one-time link (`/session/<token>`) and send it to the
    customer.
 
 As the customer (opening that link):
 
-4. The page starts a session automatically — no login step. First session
+5. The page starts a session automatically — no login step. First session
    flips the pass `issued` → `active`.
-5. Type requirements in the box and send; the agent replies in turn, and
+6. Type requirements in the box and send; the agent replies in turn, and
    "spec coverage" climbs with each accepted answer, one fixed template
    section at a time (goals → users → flows → data → integrations →
    constraints → budget range → success criteria → out of scope → risks).
-6. Click "End session" — the only way a session ends. Tokens used, cost,
+7. Click "End session" — the only way a session ends. Tokens used, cost,
    and the pass's remaining sessions/budget are shown back and recorded.
 
 Back to Guy:
 
-7. `/center` (or `GET /api/admin/customers`) shows the updated pass state,
+8. `/center` (or `GET /api/admin/customers`) shows the updated pass state,
    sessions/budget remaining, and cost to date.
-8. The same link can be reused for up to 2 more sessions (3 total) until
+9. The same link can be reused for up to 2 more sessions (3 total) until
    exhausted or the 30-day window expires.
 
 ## 5. Self-walk — what was run and what happened

@@ -4,17 +4,23 @@ The first-use path from `docs/UAT_SHEET.md` §4, walked at phone size
 (390x844) as the operator and as a customer, by `tools/uat/phone_walk.py`
 through `o-uat-run`.
 
-discovery-studio has no AI1-Admin username/password: `/center` and
-`/api/admin/*` sit behind a Cloudflare Access application restricted to
-`guy@granitcorp.com` in production (not provisioned yet, see
-`docs/UAT_SHEET.md` §1-2), with a bearer-token check as the
-belt-and-suspenders layer behind it (`lib/admin.ts`). The walk
-authenticates the same way, via `ADMIN_API_TOKEN` -- no password is read,
-printed, or stored anywhere in this flow.
+`/center` now has an AI1-Admin sign-in form (JOB-3950, decision 141):
+`ai1-admin@granitcorp.com` plus the one shared password delivered into
+`AI1_ADMIN_PASSWORD` by Integrations (`other:ai1-admin`, field `api_key`)
+via `o-secret-push` -- never a password created for this product alone
+(`lib/admin.ts`). `/api/admin/*` keeps its separate bearer-token check as
+the belt-and-suspenders layer for scripts (`lib/admin.ts`). In production
+`/center` and `/api/admin/*` also sit behind a Cloudflare Access
+application restricted to `guy@granitcorp.com` (not provisioned yet, see
+`docs/UAT_SHEET.md` §1-2). The walk signs in via `AI1_ADMIN_PASSWORD` and
+authenticates to `/api/admin/*` via `ADMIN_API_TOKEN` -- neither read,
+printed, or stored anywhere beyond this flow.
 
-## 1. Guy issues a pass
-1. Open `/center` -- empty console on first use.
-2. Fill in "Payment received -- activate pass" with the customer's name
+## 1. Guy signs in and issues a pass
+1. Open `/center` -- the AI1-Admin sign-in form on first use.
+2. Sign in with `ai1-admin@granitcorp.com` and the shared AI1-Admin
+   password.
+3. Fill in "Payment received -- activate pass" with the customer's name
    and submit.
 
 **You should see:** the form and its button fit the 390px width with every
