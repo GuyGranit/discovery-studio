@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """JOB-3359: a real-Chromium phone-size (390x844) walk of the discovery-studio
 UAT sheet (~/ai1-context/uat-sheets/discovery-studio.md) -- the first-use
-path docs/UAT_SHEET.md §4 names: Guy (the operator) issues a pass from
-/center, the customer opens the one-time /session/<token> link, has a short
-interview, and ends the session. Runs against ANY base URL (a local
-instance for development, or the real DEV address once one exists, through
-o-uat-run). This app has no AI1-Admin username/password: /center and
-/api/admin/* sit behind Cloudflare Access in production (not provisioned
-yet) with a bearer-token check as the belt-and-suspenders layer behind it
-(lib/admin.ts); the walk authenticates to /api/admin/* the same way, via
---admin-token / ADMIN_API_TOKEN, never printed.
+path docs/UAT_SHEET.md §4 names: Guy (the operator) signs in as AI1-Admin,
+issues a pass from /center, the customer opens the one-time /session/<token>
+link, has a short interview, and ends the session. Runs against ANY base
+URL (a local instance for development, or the real DEV address once one
+exists, through o-uat-run). /center's sign-in form accepts
+ai1-admin@granitcorp.com and the one shared password in AI1_ADMIN_PASSWORD
+(decision 141, lib/admin.ts) -- never a password created for this product
+alone; /api/admin/* still takes the separate bearer-token check behind it
+(lib/admin.ts) for scripts. The walk signs in via --admin-password /
+AI1_ADMIN_PASSWORD and authenticates to /api/admin/* via --admin-token /
+ADMIN_API_TOKEN, neither ever printed.
 
 Besides pass/fail per step, every page visited is checked for the four
 phone failure kinds JOB-3359 names: text cut off (an element's content
@@ -117,7 +119,7 @@ class PhoneWalk:
         self.add(f"{label}: tap targets are at least 44px tall", len(small_targets) == 0, small_targets)
 
 
-def run(base_url: str, out_dir: str, admin_token: str) -> list[dict]:
+def run(base_url: str, out_dir: str, admin_token: str, admin_password: str) -> list[dict]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     results: list[dict] = []
@@ -136,17 +138,32 @@ def run(base_url: str, out_dir: str, admin_token: str) -> list[dict]:
             walk.shot("landing")
             walk.check_phone_page("Step 0 (landing page)")
 
-            # ---- Step 1: Guy opens /center (empty console, first use) ----
+            # ---- Step 1: Guy opens /center and signs in as AI1-Admin ----
             r = page.goto(base + "/center")
-            walk.add("Step 1: /center opens at 390px", r.status == 200, f"status {r.status}")
+            walk.add("Step 1: /center shows the AI1-Admin sign-in form at 390px", r.status == 200, f"status {r.status}")
+            walk.shot("center-signin")
+            walk.check_phone_page("Step 1 (/center, sign-in)")
+
+            page.fill('input[name="email"]', "ai1-admin@granitcorp.com")
+            page.fill('input[name="password"]', admin_password)
+            with page.expect_navigation():
+                page.click('button:has-text("Sign in")')
+            walk.add(
+                "Step 1b: AI1-Admin sign-in succeeds, no error shown",
+                "error=1" not in page.url,
+                page.url,
+            )
             walk.shot("center-empty")
-            walk.check_phone_page("Step 1 (/center, empty)")
+            walk.check_phone_page("Step 1b (/center, signed in, empty)")
 
             # ---- Step 2: "Payment received -- activate pass" ----
+            # Scoped to this form specifically: /center now also carries a
+            # "Sign out" submit button (JOB-3950), so a bare
+            # button[type="submit"] would match whichever renders first.
             page.fill('input[name="name"]', LONG_NAME)
             page.fill('input[name="email"]', "uat-walk@example.test")
             with page.expect_navigation():
-                page.click('button[type="submit"]')
+                page.click('button:has-text("Payment received")')
             walk.add("Step 2: activating a pass returns to /center with no error", "/center" in page.url, page.url)
             walk.shot("center-after-activate")
             walk.check_phone_page("Step 2 (/center, pass issued)")
@@ -216,12 +233,17 @@ def main() -> int:
     ap.add_argument("--base-url", required=True)
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--admin-token", default=os.environ.get("ADMIN_API_TOKEN", ""))
+    ap.add_argument("--admin-password", default=os.environ.get("AI1_ADMIN_PASSWORD", ""))
     a = ap.parse_args()
     if not a.admin_token:
-        print("no admin token given (ADMIN_API_TOKEN is empty) -- discovery-studio has no AI1-Admin password, "
-              "/api/admin/* takes a bearer token instead (lib/admin.ts)")
+        print("no admin token given (ADMIN_API_TOKEN is empty) -- /api/admin/* takes a bearer token "
+              "(lib/admin.ts), separate from AI1-Admin's /center sign-in")
         return 3
-    results = run(a.base_url, a.out_dir, a.admin_token)
+    if not a.admin_password:
+        print("no AI1-Admin password given (AI1_ADMIN_PASSWORD is empty) -- /center's sign-in form "
+              "takes ai1-admin@granitcorp.com and this shared password (decision 141, lib/admin.ts)")
+        return 3
+    results = run(a.base_url, a.out_dir, a.admin_token, a.admin_password)
     n_fail = sum(1 for r in results if r["result"] == "fail")
     print(f"phone walk: {len(results) - n_fail} pass, {n_fail} fail of {len(results)}")
     return 0 if not n_fail else 1

@@ -79,10 +79,13 @@ docker compose down
 ## Required env vars
 
 See `.env.example` for the full, current list with explanatory comments.
-At minimum for a working DEV deploy: `ADMIN_API_TOKEN`, `APP_HOSTNAME`.
-`DISCOVERY_AGENT_API_KEY` is optional — if unset, the interviewer agent
-runs on its deterministic offline engine instead of calling out to a model
-(see `lib/interviewer.ts`).
+At minimum for a working DEV deploy: `ADMIN_API_TOKEN`, `AI1_ADMIN_PASSWORD`,
+`APP_HOSTNAME`. `AI1_ADMIN_PASSWORD` gates `/center`'s AI1-Admin sign-in
+form (JOB-3950, decision 141) — the Integrations value `other:ai1-admin`
+(field `api_key`), delivered by `o-secret-push`, same as every other org
+app. `DISCOVERY_AGENT_API_KEY` is optional — if unset, the interviewer
+agent runs on its deterministic offline engine instead of calling out to a
+model (see `lib/interviewer.ts`).
 
 ## What this doc does not cover
 
