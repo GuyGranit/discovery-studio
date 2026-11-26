@@ -3,20 +3,31 @@
 UAT sheet (~/ai1-context/uat-sheets/discovery-studio.md) -- the first-use
 path docs/UAT_SHEET.md §4 names: Guy (the operator) issues a pass from
 /center, the customer opens the one-time /session/<token> link, has a short
-interview, and ends the session. Runs against ANY base URL (a local
-instance for development, or the real DEV address once one exists, through
-o-uat-run). This app has no AI1-Admin username/password: /center and
-/api/admin/* sit behind Cloudflare Access in production (not provisioned
-yet) with a bearer-token check as the belt-and-suspenders layer behind it
-(lib/admin.ts); the walk authenticates to /api/admin/* the same way, via
---admin-token / ADMIN_API_TOKEN, never printed.
+interview, and ends the session. This app has no AI1-Admin username/
+password: /center and /api/admin/* sit behind Cloudflare Access in
+production (not provisioned yet) with a bearer-token check as the
+belt-and-suspenders layer behind it (lib/admin.ts); the walk authenticates
+to /api/admin/* the same way, via --admin-token / ADMIN_API_TOKEN, never
+printed, and also checks that a request with no token or the wrong token
+is rejected -- so "opens ... as AI1-Admin" is something this walk actually
+exercises, not merely assumed.
+
+JOB-3949: --base-url must be the real public DEV address. Every walk since
+JOB-3466 ran against a loopback substitute instead (no live DEV address
+existed) and the "pass" that produced was carried, unqualified, into the
+ready card's "READY: walked ... and passed" headline -- on days the public
+address plainly did not open. A loopback/private --base-url is now
+refused unless --local-fallback is passed, and even then the overall
+result is forced to fail: a loopback run proves phone-size layout only,
+never that the public DEV address opens.
 
 Besides pass/fail per step, every page visited is checked for the four
 phone failure kinds JOB-3359 names: text cut off (an element's content
 overflows its own box), horizontal scroll (the page is wider than the
 viewport), a button out of reach (its tap target falls outside the
 viewport width, or is smaller than 44px and so unreliable to tap), and an
-error shown (a blocked-session message or a stack trace left visible).
+error shown (a blocked-session message, an "Unknown host" routing error,
+or a stack trace left visible).
 
 Writes results.json and one screenshot per step to --out-dir, the shape
 o-uat-run already expects.
@@ -25,13 +36,37 @@ o-uat-run already expects.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import os
+import socket
 from pathlib import Path
+from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
 PHONE_VIEWPORT = {"width": 390, "height": 844}
+
+# JOB-3949: every walk since JOB-3466 has run against a loopback
+# substitute (no live DEV address existed), and the resulting "pass" was
+# then carried, unqualified, into docs/PHONE_WALK_*.md's "WALK: pass"
+# marker and from there into the ready card's "READY: walked ... and
+# passed" headline -- even on days the sheet's own "Address (DEV)" line
+# said the public address did not answer. A walk of a substitute proves
+# nothing about whether the public address opens, so it must never be
+# allowed to produce the same unqualified "pass" signal.
+def _is_loopback_host(host: str) -> bool:
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        pass
+    try:
+        return all(
+            ipaddress.ip_address(addr[4][0]).is_loopback
+            for addr in socket.getaddrinfo(host, None)
+        )
+    except socket.gaierror:
+        return False
 
 # A long, unbroken (no spaces) but realistic-looking company name. The
 # /center customers table has no word-break by default, so one customer
@@ -64,7 +99,8 @@ class PhoneWalk:
         html = page.content()
         self.add(
             f"{label}: no error shown",
-            "Traceback" not in html and "Application error" not in html,
+            "Traceback" not in html and "Application error" not in html
+            and "Unknown host" not in html,
             "",
         )
 
@@ -117,11 +153,28 @@ class PhoneWalk:
         self.add(f"{label}: tap targets are at least 44px tall", len(small_targets) == 0, small_targets)
 
 
-def run(base_url: str, out_dir: str, admin_token: str) -> list[dict]:
+def run(base_url: str, out_dir: str, admin_token: str, public_address_confirmed: bool) -> list[dict]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     results: list[dict] = []
     base = base_url.rstrip("/")
+
+    # JOB-3949: this is the premise the rest of the walk's "pass" rides on.
+    # A loopback/local run (--local-fallback) always reports this as a
+    # failure, on purpose: whatever else below passes, the overall walk
+    # must not come out "0 failures" when it never touched the public DEV
+    # address, because that's exactly the gap that let a ready card claim
+    # "walked ... and passed" on a day the public address did not open.
+    results.append({
+        "feature": "Premise: base-url is the public DEV address, not a loopback/local substitute",
+        "result": "pass" if public_address_confirmed else "fail",
+        "note": "" if public_address_confirmed else (
+            f"ran with --local-fallback against {base!r} -- this walk only "
+            "exercises phone-size layout, it is NOT evidence the public DEV "
+            "address opens and must not be reported as an unqualified pass"
+        ),
+        "screenshot": "",
+    })
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -129,6 +182,23 @@ def run(base_url: str, out_dir: str, admin_token: str) -> list[dict]:
             ctx = browser.new_context(viewport=PHONE_VIEWPORT, is_mobile=True, has_touch=True)
             page = ctx.new_page()
             walk = PhoneWalk(page, out, results)
+
+            # ---- Admin surface really requires AI1-Admin, not just a hit ----
+            unauth = page.request.get(base + "/api/admin/customers")
+            walk.add(
+                "Admin check: /api/admin/customers rejects a request with no admin token",
+                unauth.status == 401,
+                f"status {unauth.status}",
+            )
+            wrong = page.request.get(
+                base + "/api/admin/customers",
+                headers={"authorization": "Bearer wrong-token"},
+            )
+            walk.add(
+                "Admin check: /api/admin/customers rejects the wrong admin token",
+                wrong.status == 401,
+                f"status {wrong.status}",
+            )
 
             # ---- Step 0: landing page ----
             r = page.goto(base + "/")
@@ -216,12 +286,37 @@ def main() -> int:
     ap.add_argument("--base-url", required=True)
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--admin-token", default=os.environ.get("ADMIN_API_TOKEN", ""))
+    ap.add_argument(
+        "--local-fallback",
+        action="store_true",
+        help=(
+            "Acknowledge --base-url is a loopback/local substitute, not the "
+            "public DEV address (used when the public address isn't live "
+            "yet). The walk still runs, but its overall result is forced to "
+            "fail -- it only proves phone-size layout, never that the "
+            "public DEV address opens."
+        ),
+    )
     a = ap.parse_args()
     if not a.admin_token:
         print("no admin token given (ADMIN_API_TOKEN is empty) -- discovery-studio has no AI1-Admin password, "
               "/api/admin/* takes a bearer token instead (lib/admin.ts)")
         return 3
-    results = run(a.base_url, a.out_dir, a.admin_token)
+
+    host = urlparse(a.base_url).hostname or ""
+    loopback = _is_loopback_host(host)
+    if loopback and not a.local_fallback:
+        print(
+            f"--base-url {a.base_url!r} resolves to a loopback address -- "
+            "this cannot certify that the public DEV address opens. Pass "
+            "--local-fallback to run a phone-layout-only check against it "
+            "(its result will be reported as a failure, on purpose: it is "
+            "not a public-address pass)."
+        )
+        return 4
+    public_address_confirmed = not loopback
+
+    results = run(a.base_url, a.out_dir, a.admin_token, public_address_confirmed)
     n_fail = sum(1 for r in results if r["result"] == "fail")
     print(f"phone walk: {len(results) - n_fail} pass, {n_fail} fail of {len(results)}")
     return 0 if not n_fail else 1
