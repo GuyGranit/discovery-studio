@@ -1,0 +1,18 @@
+[
+  {
+    "tried": "https://discover.granitcorp.com/",
+    "error": "Page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at https://discover.granitcorp.com/"
+  },
+  {
+    "tried": "https://discover.dev.agenticaination.com/",
+    "status": 404,
+    "final_url": "https://discover.dev.agenticaination.com/",
+    "title": ""
+  },
+  {
+    "tried": "https://discover-dev.agenticaination.com/",
+    "status": 200,
+    "final_url": "https://bitter-smoke-00ec.cloudflareaccess.com/cdn-cgi/access/login/discover-dev.agenticaination.com?kid=3b4ffaee9c13d56d828ab0e2d7f71afd67d241f03dd497fbffabb1d6a9917b77&meta=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjdiMmVlY2M0OWNiNWE5ZjZjODlmNTMwY2ZmNDA0MTU0YjkyYzIxMzFiMzVkYzQzMGVhOWMwMzM0YTA3NmI5YmUifQ.eyJ0eXBlIjoibWV0YSIsImF1ZCI6IjNiNGZmYWVlOWMxM2Q1NmQ4MjhhYjBlMmQ3ZjcxYWZkNjdkMjQxZjAzZGQ0OTdmYmZmYWJiMWQ2YTk5MTdiNzciLCJob3N0bmFtZSI6ImRpc2NvdmVyLWRldi5hZ2VudGljYWluYXRpb24uY29tIiwicmVkaXJlY3RfdXJsIjoiLyIsInNlcnZpY2VfdG9rZW5fc3RhdHVzIjpmYWxzZSwiaXNfd2FycCI6ZmFsc2UsImlzX2dhdGV3YXkiOmZhbHNlLCJleHAiOjE3OTU2OTUzMTksIm5iZiI6MTc5NTY5NTAxOSwiaWF0IjoxNzk1Njk1MDE5LCJhdXRoX3N0YXR1cyI6Ik5PTkUiLCJtdGxzX2F1dGgiOnsiY2VydF9pc3N1ZXJfZG4iOiIiLCJjZXJ0X3NlcmlhbCI6IiIsImNlcnRfaXNzdWVyX3NraSI6IiIsImNlcnRfcHJlc2VudGVkIjpmYWxzZSwiY29tbW9uX25hbWUiOiIiLCJhdXRoX3N0YXR1cyI6Ik5PTkUifSwicmVhbF9jb3VudHJ5IjoiSUwiLCJhcHBfc2Vzc2lvbl9oYXNoIjoiY2MyMGQ5ZjA5YTE1NWMxNjQxYzI5NTliZmVhNDYwNDkwNDczN2Y0OWIwZDc3NWM4M2Q3ZDUwYzM3MDllNzllMiJ9.Dj8NDmzcSQ2mOQWPkE1SxShkIjEXRDwd5q8UpauBiXnisk2uzzf-YjrVe0bwa2FsPf7HSUGwYxzSuiGtVv_P62Go0CYnpu-OouUvm7RcCqN0bNfh-6BEh2yLP2CawI0xctZsfhdgmwnSWt9oFy5eO5ga8aXpSoRJso3p6BHLVlo5Wwm837piGXahi-vCEbxt8jQaYciIyq16BbYgKBn-AH7q0TfbqLVbPFmPslXbvQeMZLzCMAz_f2kNdZ-km-ohKpy1jymKLCPdnCfedw20Shzf2RYveQ2RaEr-KBwwmYlckK4timXzMQF_gf_s8gCKWCropVpv83WEIl5wKFuY5w&redirect_url=%2F",
+    "title": "Sign in \u30fb Cloudflare Access"
+  }
+]
